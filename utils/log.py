@@ -1,6 +1,6 @@
 import traceback
 
-debug=True
+debug=False
 
 DEBUG_LEVEL='debug'
 INFO_LEVEL='info'

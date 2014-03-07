@@ -105,7 +105,8 @@ class CloudDisk(object):
 			param_list.append(('path',dest_dir))
 			param_list.append(('overwrite','False'))
 
-			self.oauther.PostFile(upload_url,file_name,param_list)
+			reporter=PosterReporter(file_name)
+			self.oauther.PostFile(upload_url,file_name,param_list,reporter)
 			return True
 		except KeyError as e:
 			log.PyLog(log.DEBUG_LEVEL,'upload error:' + str(e))
@@ -176,10 +177,7 @@ class CloudDisk(object):
 		jsonobj = self.oauther.GetRestJson(dir_url,[])
 
 		dir_type = jsonobj['type']
-		print jsonobj['path'] + ' is a ' + dir_type
-		print 'size:' + str(jsonobj['size'])
-		print 'create time:' + jsonobj['create_time']
-		print 'modify time:' + jsonobj['modify_time']
+		print '[type]:%s\t[size]:%d\t[create time]:%s\t[modify time]:%s' %  (dir_type,jsonobj['size'],jsonobj['create_time'],jsonobj['modify_time'])
 		print '--------------------------------------------'
 		print 'files in the directory:'
 		if dir_type == 'folder':
@@ -214,6 +212,16 @@ class CloudDisk(object):
 		account_info_url = 'http://openapi.kuaipan.cn/1/account_info'
 		self.account_info = self.oauther.GetRestJson(account_info_url,[])
 		return self.account_info
+
+class PosterReporter(object):
+	def __init__(self,file_name):
+		self.file_size = os.stat(file_name).st_size 
+		self.current_size = 0
+
+	def report_progress(self,size):
+		self.current_size += size
+		print "uploading:%d%%\r" % (self.current_size*100/self.file_size),
+
 '''
 debug_oauth = False
 if debug_oauth:
@@ -234,13 +242,3 @@ else:
 		log.PyLog(log.INFO_LEVEL,'Init Fail')
 		raise SystemExit(1)
 '''
-	#if kuaipan.CreateFoler('/linux'):
-		#log.PyLog(log.INFO_LEVEL,'create folder OK')
-	#else:
-		#log.PyLog(log.INFO_LEVEL,'create foler Fail')
-		#raise SystemExit(1)
-
-	#kuaipan.DownloadFile('rsync/STAR.torrent')
-	#kuaipan.UploadFile('abc.txt','/abc.txt')
-	#kuaipan.Dir('/rsync',True)
-	

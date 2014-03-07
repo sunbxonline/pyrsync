@@ -8,8 +8,8 @@ import random
 import json
 import base64
 from utils import log
-from poster.encode import multipart_encode
-from poster.streaminghttp import register_openers
+from pyposter.encode import multipart_encode
+from pyposter.streaminghttp import register_openers
 
 REQUEST_TOKEN_URL = 'https://openapi.kuaipan.cn/open/requestToken'
 
@@ -263,7 +263,7 @@ class PyOAuth(object):
 			return None
 
 		if response.getcode() == 200:
-			return response
+			return response,int(response.info()["content-length"])
 		else:
 			try:
 				res_json = json.load(response)
@@ -274,13 +274,21 @@ class PyOAuth(object):
 				log.PyLog(log.DEBUG_LEVEL,str(e))
 				return None
 
-	def PostFile(self,url,file_name):
-		register_openers()
-		datagen, headers = multipart_encode({"file": open(file_name, "rb"),"name":file_name})
-		# Create the Request object
-		request = urllib2.Request(url, datagen, headers)
-		# Actually do the request, and get the response
-		response = urllib2.urlopen(request)
-		if response != None:
-			print response.read()
+	def PostFile(self,url,file_name,param_list,reporter):
+		try:
+			register_openers(reporter)
+			datagen, headers = multipart_encode({"file": open(file_name, "rb"),"name":file_name})
+
+			param_list += self.PrepareRequest()
+			request_url = self.GetRequestUrl(url,param_list)
+
+			# Create the Request object
+			request = urllib2.Request(url, datagen, headers)
+			# Actually do the request, and get the response
+			response = urllib2.urlopen(request)
+			if response != None:
+				print response.read()
+		except urllib2.HTTPError as e:
+			log.PyLog(log.INFO_LEVEL,str(e))
+
 
